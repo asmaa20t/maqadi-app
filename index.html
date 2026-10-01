@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق مقاضي البيت</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function App() {
+            const [activeTab, setActiveTab] = React.useState('home');
+            const [syncStatus, setSyncStatus] = React.useState('متزامن الآن مع الزوج/ة 🟢');
+
+            // بيانات المخزون الافتراضية
+            const [inventory, setInventory] = React.useState([
+                { id: 1, name: 'أرز (كيلو)', category: 'مطبخ جاف', stock: 2, minStock: 3, unit: 'كيس' },
+                { id: 2, name: 'سكر', category: 'مطبخ جاف', stock: 1, minStock: 2, unit: 'كيلو' },
+                { id: 3, name: 'حليب طازج', category: 'ثلاجة وفريزر', stock: 0, minStock: 2, unit: 'عبوة' },
+                { id: 4, name: 'بيض', category: 'ثلاجة وفريزر', stock: 1, minStock: 1, unit: 'طبق' },
+                { id: 5, name: 'معجون أسنان', category: 'عناية وحمام', stock: 1, minStock: 2, unit: 'حبة' },
+                { id: 6, name: 'مسحوق غسيل', category: 'منظفات', stock: 0, minStock: 1, unit: 'علبة' },
+                { id: 7, name: 'منعم أقمشة', category: 'منظفات', stock: 2, minStock: 1, unit: 'عبوة' },
+            ]);
+
+            const [newItemName, setNewItemName] = React.useState('');
+            const [newItemCategory, setNewItemCategory] = React.useState('مطبخ جاف');
+            const [newItemStock, setNewItemStock] = React.useState(1);
+            const [newItemMin, setNewItemMin] = React.useState(1);
+
+            // زيادة ونقصان الكمية
+            const updateStock = (id, delta) => {
+                setInventory(inventory.map(item => {
+                    if (item.id === id) {
+                        const newStock = Math.max(0, item.stock + delta);
+                        return { ...item, stock: newStock };
+                    }
+                    return item;
+                }));
+            };
+
+            // إضافة منتج جديد
+            const addItem = (e) => {
+                e.preventDefault();
+                if (!newItemName.trim()) return;
+                const newItem = {
+                    id: Date.now(),
+                    name: newItemName,
+                    category: newItemCategory,
+                    stock: parseInt(newItemStock),
+                    minStock: parseInt(newItemMin),
+                    unit: 'حبة'
+                };
+                setInventory([...inventory, newItem]);
+                setNewItemName('');
+                alert('تمت الإضافة بنجاح!');
+            };
+
+            // قائمة النواقص (التسوق)
+            const shoppingList = inventory.filter(item => item.stock <= item.minStock);
+
+            return (
+                <div className="min-h-screen pb-12">
+                    {/* شريط علوي */}
+                    <header className="bg-emerald-600 text-white shadow-md p-4 sticky top-0 z-50">
+                        <div className="max-w-4xl mx-auto flex justify-between items-center">
+                            <h1 className="text-xl font-bold">🛒 تطبيق مقاضي البيت</h1>
+                            <span className="text-xs bg-emerald-700 px-3 py-1 rounded-full">{syncStatus}</span>
+                        </div>
+                    </header>
+
+                    {/* التنقل بين الصفحات */}
+                    <nav className="bg-white shadow-sm border-b mb-6">
+                        <div className="max-w-4xl mx-auto flex justify-around p-3">
+                            <button 
+                                onClick={() => setActiveTab('home')}
+                                className={`font-medium pb-1 ${activeTab === 'home' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500'}`}>
+                                الرئيسية والنواقص
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('inventory')}
+                                className={`font-medium pb-1 ${activeTab === 'inventory' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500'}`}>
+                                ستوك البيت الكامل
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('add')}
+                                className={`font-medium pb-1 ${activeTab === 'add' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500'}`}>
+                                إضافة منتج جديد
+                            </button>
+                        </div>
+                    </nav>
+
+                    <main className="max-w-4xl mx-auto px-4">
+                        {/* الصفحة الرئيسية: النواقص */}
+                        {activeTab === 'home' && (
+                            <div className="space-y-6">
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm">
+                                    <h2 className="text-lg font-bold text-amber-800 mb-2">🚨 قائمة التسوق المطلوبة حالياً</h2>
+                                    <p className="text-sm text-amber-700 mb-4">هذه الأغراض خلصت أو قربت تخلص وتحتاج تنشريها قريباً:</p>
+                                    
+                                    {shoppingList.length === 0 ? (
+                                        <p className="text-emerald-600 font-medium">كل الأمور تمام! مافي شي ناقص بالبيت حالياً 🎉</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {shoppingList.map(item => (
+                                                <div key={item.id} className="bg-white p-3 rounded-lg flex justify-between items-center shadow-xs border">
+                                                    <div>
+                                                        <span className="font-bold">{item.name}</span>
+                                                        <span className="text-xs text-slate-500 mr-2">({item.category})</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">المتوفّر: {item.stock} {item.unit}</span>
+                                                        <button 
+                                                            onClick={() => updateStock(item.id, 1)}
+                                                            className="bg-emerald-600 text-white text-xs px-3 py-1 rounded hover:bg-emerald-700">
+                                                            تم الشراء (+1)
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* صفحة الستوك الكامل */}
+                        {activeTab === 'inventory' && (
+                            <div className="bg-white rounded-xl shadow-sm p-5 border">
+                                <h2 className="text-lg font-bold text-slate-800 mb-4">📦 جرد البيت الحالي (المطبخ، الحمام، المنظفات)</h2>
+                                <div className="space-y-4">
+                                    {inventory.map(item => (
+                                        <div key={item.id} className="flex justify-between items-center border-b pb-3">
+                                            <div>
+                                                <h3 className="font-bold text-slate-700">{item.name}</h3>
+                                                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{item.category}</span>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <button onClick={() => updateStock(item.id, -1)} className="w-8 h-8 bg-slate-200 rounded-full font-bold hover:bg-slate-300">-</button>
+                                                <span className="font-bold w-12 text-center">{item.stock} {item.unit}</span>
+                                                <button onClick={() => updateStock(item.id, 1)} className="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-full font-bold hover:bg-emerald-200">+</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* صفحة إضافة منتج جديد */}
+                        {activeTab === 'add' && (
+                            <div className="bg-white rounded-xl shadow-sm p-6 border max-w-lg mx-auto">
+                                <h2 className="text-lg font-bold text-slate-800 mb-4">➕ إضافة صنف جديد للمقاضي</h2>
+                                <form onSubmit={addItem} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">اسم المنتج:</label>
+                                        <input 
+                                            type="text" 
+                                            value={newItemName}
+                                            onChange={(e) => setNewItemName(e.target.value)}
+                                            placeholder="مثال: شامبو، طحين، معلبات..." 
+                                            className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">القسم:</label>
+                                        <select 
+                                            value={newItemCategory}
+                                            onChange={(e) => setNewItemCategory(e.target.value)}
+                                            className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                            <option value="مطبخ جاف">مطبخ جاف</option>
+                                            <option value="ثلاجة وفريزر">ثلاجة وفريزر</option>
+                                            <option value="عناية وحمام">عناية وحمام</option>
+                                            <option value="منظفات">منظفات البيت</option>
+                                        </select>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">الكمية الحالية:</label>
+                                            <input 
+                                                type="number" 
+                                                min="0"
+                                                value={newItemStock}
+                                                onChange={(e) => setNewItemStock(e.target.value)}
+                                                className="w-full border rounded-lg p-2.5 outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">حد التنبيه (أقل كمية):</label>
+                                            <input 
+                                                type="number" 
+                                                min="0"
+                                                value={newItemMin}
+                                                onChange={(e) => setNewItemMin(e.target.value)}
+                                                className="w-full border rounded-lg p-2.5 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition">
+                                        حفظ وإضافة للمخزون
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
